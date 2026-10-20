@@ -1,75 +1,50 @@
-# Gasvalpo – pago en línea (demo con PayZen)
+# Pago en línea multi-medio con PayZen (demo)
 
-Proyecto separado en **backend** (Node/Express) y **frontend** (HTML/Bootstrap estático). Usa el **formulario embebido (Krypton V4)** de PayZen/Lyra, con soporte para Webpay (Transbank) y dos tiendas: Tarjetas (Mall) y Webpay Plus.
-
-## Estructura
-
-    backend/    API Express: consulta de deuda, creación del pago, retorno e IPN
-    frontend/   Sitio estático (index.html + app.js)
+Backend Node/Express + frontend estático (HTML/Bootstrap) con el **formulario embebido (Krypton V4)** de PayZen/Lyra.
 
 ## Flujo
 
-1. El usuario ingresa su N° de cliente y el backend devuelve la deuda.
-2. Al elegir el medio de pago, el backend llama a `Charge/CreatePayment` con las credenciales de esa tienda y devuelve un `formToken`.
-3. El frontend carga `kr-payment-form.min.js` y renderiza el formulario con `KR.setFormConfig`. Con Webpay Plus, el botón de Webpay se presiona automáticamente.
-4. Al terminar (o al volver de Webpay), PayZen hace POST al **backend** en `/retorno-pago` con `kr-answer` y `kr-hash`; el backend valida el hash con HMAC-SHA256.
+1. `index.html`: el usuario elige **Test** o **Producción** (botones superiores) y luego un medio de pago (cuadro con la bandera del país).
+2. `gas.html?tienda=<medio>&modo=<test|prod>`: página "Pago fácil". El usuario ingresa su documento (RUT en Chile, DNI en Perú) y se abre el detalle de la cuenta.
+3. Al pulsar **Pagar**, el backend llama a `Charge/CreatePayment` con las credenciales del medio y modo elegidos y devuelve un `formToken`. El frontend renderiza el formulario con `KR.setFormConfig`. En **Transbank (Plus)** el botón de Webpay se presiona automáticamente.
+4. PayZen hace POST al backend en `/retorno-pago`. El backend valida `kr-hash` (HMAC-SHA256) y muestra "Pago aceptado" o "Pago rechazado", con la opción de ver la respuesta JSON.
+
+## Medios de pago
+
+| Clave            | Nombre            | País  |
+|------------------|-------------------|-------|
+| `transbank_mall` | Transbank (Mall)  | Chile |
+| `transbank_plus` | Transbank (Plus)  | Chile |
+| `klap`           | Klap              | Chile |
+| `pagonxt`        | Pagonxt           | Chile |
+| `izipay`         | Izipay            | Perú  |
+| `niubiz`         | Niubiz            | Perú  |
+
+Cada medio tiene dos juegos de credenciales en el `.env`:
+
+    PAYZEN_<MEDIO>_<TEST|PROD>_<USERNAME|PASSWORD|PUBLIC_KEY|SHA256>
+
+Ejemplo: `PAYZEN_TRANSBANK_PLUS_PROD_PASSWORD`. Las credenciales salen de Back Office > Configuración > Tienda > Claves de la API REST. Usa `.env.example` como plantilla.
+
+## Clientes de prueba
+
+Están en el arreglo `CLIENTES` de `server.js`: cada uno tiene un RUT (Chile) y un DNI (Perú) con su deuda. Los clientes 2, 3 y 4 tienen datos de relleno; reemplázalos por los reales.
 
 ## Ejecutar en local
 
-Backend:
-
-    cd backend
     npm install
     cp .env.example .env    # y completa las credenciales
     npm start               # http://localhost:3000
 
-Frontend (otra terminal):
+## Despliegue en Render
 
-    npx serve frontend -l 5500    # http://localhost:5500
-
-En local, `frontend/app.js` apunta solo a `http://localhost:3000`.
-
-## Variables del backend (`backend/.env`)
-
-- `FRONTEND_URL`: URL del frontend permitida por CORS (sin "/" final).
-- `PAYZEN_ENDPOINT` y `PAYZEN_STATIC`: endpoints de PayZen.
-- `PAYZEN_MALL_*` y `PAYZEN_PLUS_*`: `USERNAME`, `PASSWORD`, `PUBLIC_KEY` y `SHA256` de cada tienda (Back Office > Configuración > Tienda > Claves de la API REST).
-
-## Subir a GitHub
-
-    git init
-    git add .
-    git status        # verifica que NO aparezca backend/.env
-    git commit -m "Proyecto separado en frontend y backend"
-    git branch -M main
-    git remote add origin https://github.com/TU-USUARIO/TU-REPO.git
-    git push -u origin main
-
-## Desplegar en Render
-
-**1. Backend** (New > Web Service, conecta el repo)
-
-- Root Directory: `backend`
-- Build Command: `npm install`
-- Start Command: `npm start`
-- Health Check Path: `/health`
-- Environment: todas las variables de `backend/.env.example` (por ahora deja `FRONTEND_URL` con un valor temporal)
-
-**2. Frontend** (New > Static Site, mismo repo)
-
-- Root Directory: `frontend`
-- Build Command: (vacío)
-- Publish Directory: `.`
-
-**3. Conectar ambos**
-
-- En `frontend/app.js`, reemplaza `https://TU-BACKEND.onrender.com` por la URL real del backend y haz push.
-- En el backend, pon `FRONTEND_URL` con la URL del Static Site (sin "/" final).
-- En el Back Office de PayZen, configura el IPN de ambas tiendas como `https://TU-BACKEND.onrender.com/webhook-payzen`.
+- Web Service con `npm install` / `npm start` y Health Check Path `/health`.
+- Carga en Environment todas las variables de `.env.example`. `FRONTEND_URL` es la URL del frontend (puede incluir la ruta de GitHub Pages).
+- En el Back Office de PayZen, configura el IPN de todas las tiendas (test y producción) como `https://TU-BACKEND.onrender.com/webhook-payzen`.
 
 ## Antes de producción
 
 - Marca la deuda como pagada en el IPN (`/webhook-payzen`), no en el retorno del navegador.
-- Confirma que Webpay esté activo como medio de pago en tus tiendas.
-- Reemplaza el objeto `DEUDAS` por tu consulta real.
-- En el plan gratuito de Render el backend se "duerme" tras un rato sin uso, y la primera petición puede tardar. Para pagos reales conviene un plan que no se suspenda.
+- Reemplaza `CLIENTES` por tu consulta real.
+- El modo (`test` o `prod`) lo envía el navegador; si el sitio será público, restringe quién puede usar producción.
+- En el plan gratuito de Render el backend se "duerme" tras un rato sin uso y la primera petición puede tardar.
