@@ -8,7 +8,7 @@ app.use(express.urlencoded({ extended: false })); // PayZen devuelve kr-answer /
 
 // URL(s) del frontend, separadas por coma. Puede incluir ruta (ej. GitHub Pages:
 // https://usuario.github.io/mi-repo/). Para CORS se usa solo el origen (esquema + dominio).
-const URLS_FRONTEND = (process.env.FRONTEND_URL || 'http://localhost:5500,http://127.0.0.1:5500')
+const URLS_FRONTEND = (process.env.FRONTEND_URL)
   .split(',')
   .map((u) => u.trim())
   .filter(Boolean);
@@ -46,12 +46,12 @@ const CLIENTES = [
   {
     nombre: 'Fernando Luna',
     email: 'fernando.luna@lyra.com',
-    CL: { documento: '12.572.407-8', direccion: 'Av Chile, San Isidro', monto: 35000 },
+    CL: { documento: '12.572.407-8', direccion: 'Av Chile, San Isidro', monto: 195062 },
     PE: { documento: '12345678', direccion: 'Av. Perú 123, Lima', monto: 120 }
   },
   {
-    nombre: 'María Torres',
-    email: 'maria.torres@example.com',
+    nombre: 'Miguel Aguilar',
+    email: 'miguel.aguilar@lyra.com',
     CL: { documento: '15.234.876-2', direccion: 'Av. Providencia 1234, Santiago', monto: 18500 },
     PE: { documento: '45871236', direccion: 'Jr. de la Unión 456, Lima', monto: 85.5 }
   },
