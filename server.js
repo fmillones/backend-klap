@@ -193,7 +193,9 @@ app.post('/api/crear-pago', async (req, res) => {
         customer: { 
           email: cuenta.email, reference: cuenta.numeroCliente 
         },
-        paymentMethods: "VISA"
+        paymentMethods: [
+          'VISA',
+          'AMEX']
       })
     });
     const data = await r.json();
