@@ -192,9 +192,7 @@ app.post('/api/crear-pago', async (req, res) => {
         orderId: `GV-${tienda.clave.toUpperCase()}-${tienda.modo.toUpperCase()}-${doc}-${Date.now()}`,
         customer: { 
           email: cuenta.email, reference: cuenta.numeroCliente 
-        },
-        paymentMethods: [
-          'VISA']
+        }
       })
     });
     const data = await r.json();
