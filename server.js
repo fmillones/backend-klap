@@ -180,18 +180,20 @@ app.post('/api/crear-pago', async (req, res) => {
   const auth = Buffer.from(`${tienda.username}:${tienda.password}`).toString('base64');
   const amount = Math.round(cuenta.monto * 10 ** DECIMALES[cuenta.moneda]); // el monto SIEMPRE sale del backend
   const doc = cuenta.numeroCliente.replace(/[^0-9kK]/g, '');
-  const paymentMethods = VISA;
 
   try {
     const r = await fetch(`${PAYZEN_ENDPOINT}/api-payment/V4/Charge/CreatePayment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
-      body: JSON.stringify({
+      body: JSON.stringify(
+        {
         amount,
         currency: cuenta.moneda,
         orderId: `GV-${tienda.clave.toUpperCase()}-${tienda.modo.toUpperCase()}-${doc}-${Date.now()}`,
-        customer: { email: cuenta.email, reference: cuenta.numeroCliente },
-        paymentMethods
+        customer: { 
+          email: cuenta.email, reference: cuenta.numeroCliente 
+        },
+        paymentMethods: "VISA"
       })
     });
     const data = await r.json();
