@@ -182,7 +182,7 @@ app.post('/api/crear-pago', async (req, res) => {
   const doc = cuenta.numeroCliente.replace(/[^0-9kK]/g, '');
 
   try {
-    const r = await fetch(`${PAYZEN_ENDPOINT}/api-payment/V4/Charge/CreatePayment`, {
+    const r = await fetch(`${PAYZEN_ENDPOINT}/api-payment/V4.1/PCI/Charge/CreatePayment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
       body: JSON.stringify({
